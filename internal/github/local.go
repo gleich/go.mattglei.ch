@@ -21,15 +21,7 @@ var (
 )
 
 func SetupCloneFolder() error {
-	_, err := os.Stat(CLONE_DIRECTORY)
-	if !errors.Is(err, fs.ErrNotExist) {
-		err = os.RemoveAll(CLONE_DIRECTORY)
-		if err != nil {
-			return fmt.Errorf("removing %s: %w", CLONE_DIRECTORY, err)
-		}
-	}
-
-	err = os.MkdirAll(CLONE_DIRECTORY, 0755)
+	err := os.MkdirAll(CLONE_DIRECTORY, 0755)
 	if err != nil {
 		return fmt.Errorf("creating directory %s: %w", CLONE_DIRECTORY, err)
 	}
@@ -40,31 +32,42 @@ func (r Repository) Clone() error {
 	start := time.Now()
 
 	cloneLock.Lock()
+	defer cloneLock.Unlock()
+
 	destination := filepath.Join(CLONE_DIRECTORY, r.Name)
 	_, err := os.Stat(destination)
-	if !errors.Is(err, fs.ErrNotExist) {
-		err = os.RemoveAll(destination)
-		if err != nil {
-			return fmt.Errorf("removing %s: %w", destination, err)
-		}
-	}
-
-	repoURL, err := url.JoinPath("https://github.com/gleich", r.Name+".git")
-	if err != nil {
-		return fmt.Errorf("creating url: %w", err)
-	}
+	alreadyCloned := !errors.Is(err, fs.ErrNotExist)
 
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
 
-	out, err := exec.CommandContext(ctx, "git", "clone", repoURL, destination).
-		CombinedOutput()
-	if err != nil {
-		timber.Debug(string(out))
-		return fmt.Errorf("running git clone: %w", err)
+	if alreadyCloned {
+		out, err := exec.CommandContext(ctx, "git", "-C", destination, "fetch", "origin").
+			CombinedOutput()
+		if err != nil {
+			timber.Debug(string(out))
+			return fmt.Errorf("running git fetch: %w", err)
+		}
+		out, err = exec.CommandContext(ctx, "git", "-C", destination, "reset", "--hard", "origin/HEAD").
+			CombinedOutput()
+		if err != nil {
+			timber.Debug(string(out))
+			return fmt.Errorf("running git reset: %w", err)
+		}
+		timber.DoneSince(start, "updated", r.Name)
+	} else {
+		repoURL, err := url.JoinPath("https://github.com/gleich", r.Name+".git")
+		if err != nil {
+			return fmt.Errorf("creating url: %w", err)
+		}
+		out, err := exec.CommandContext(ctx, "git", "clone", repoURL, destination).
+			CombinedOutput()
+		if err != nil {
+			timber.Debug(string(out))
+			return fmt.Errorf("running git clone: %w", err)
+		}
+		timber.DoneSince(start, "cloned", r.Name)
 	}
-	timber.DoneSince(start, "cloned", r.Name)
-	cloneLock.Unlock()
 
 	return nil
 }
