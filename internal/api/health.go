@@ -12,7 +12,7 @@ var response []byte
 
 func init() {
 	data, err := json.Marshal(struct {
-		Ok bool `json:"ok "`
+		Ok bool `json:"ok"`
 	}{Ok: true})
 	if err != nil {
 		timber.Fatal(err, "failed to set health check response")

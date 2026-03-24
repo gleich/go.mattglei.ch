@@ -21,6 +21,7 @@ func webhookEndpoint(
 	payload, err := githubREST.ValidatePayload(r, []byte(secrets.ENV.GitHubWebhookSecret))
 	if err != nil {
 		http.Error(w, "invalid signature", http.StatusUnauthorized)
+		return
 	}
 
 	event, err := githubREST.ParseWebHook(githubREST.WebHookType(r), payload)
@@ -49,10 +50,11 @@ func webhookEndpoint(
 	}
 
 	repo := packages.Get(name)
-	if repo != nil {
+	if repo.Name == "" {
 		updatedRepo, err := github.FetchRepo(clients, repo.Owner, repo.Name)
 		if err != nil {
 			util.InternalServerError(w, fmt.Errorf("fetching repo: %w", err))
+			return
 		}
 		packages.Set(updatedRepo)
 
@@ -65,7 +67,11 @@ func webhookEndpoint(
 	} else if name != "" && owner != "" {
 		err = github.Unsubscribe(clients, owner, name)
 		if err != nil {
-			util.InternalServerError(w, fmt.Errorf("unsubscribing from %s/%s: %w", owner, name, err))
+			util.InternalServerError(
+				w,
+				fmt.Errorf("unsubscribing from %s/%s: %w", owner, name, err),
+			)
+			return
 		}
 		timber.Done("removed webhook for", name)
 	}

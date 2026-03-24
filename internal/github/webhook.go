@@ -53,9 +53,9 @@ func Unsubscribe(clients Clients, owner, name string) error {
 				name,
 				*hook.ID,
 			)
-		}
-		if err != nil {
-			return fmt.Errorf("deleting hook: %w", err)
+			if err != nil {
+				return fmt.Errorf("deleting hook: %w", err)
+			}
 		}
 	}
 

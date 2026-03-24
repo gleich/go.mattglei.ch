@@ -32,7 +32,7 @@ func RenderPackage(
 	path := strings.TrimPrefix(r.URL.Path, "/")
 	root := strings.Split(path, "/")[0]
 	repo := packages.Get(root)
-	if repo == nil {
+	if repo.Name == "" {
 		http.Error(w, util.NOT_FOUND_ERROR, http.StatusNotFound)
 		return
 	}

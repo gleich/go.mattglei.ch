@@ -30,6 +30,6 @@ func RenderIndex(config conf.Config, packages *pkg.Packages, w http.ResponseWrit
 	}
 	err := indexTemplate.Execute(w, data)
 	if err != nil {
-		util.InternalServerError(w, fmt.Errorf(": %w", err))
+		util.InternalServerError(w, fmt.Errorf("executing html template: %w", err))
 	}
 }

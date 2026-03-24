@@ -22,15 +22,15 @@ func (p *Packages) All() []github.Repository {
 	return p.packages
 }
 
-func (p *Packages) Get(name string) *github.Repository {
+func (p *Packages) Get(name string) github.Repository {
 	p.mutex.Lock()
 	defer p.mutex.Unlock()
 	for _, repo := range p.packages {
 		if repo.Name == name {
-			return &repo
+			return repo
 		}
 	}
-	return nil
+	return github.Repository{}
 }
 
 func (p *Packages) Set(repo github.Repository) {
