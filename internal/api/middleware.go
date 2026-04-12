@@ -35,9 +35,10 @@ func logRequest(next http.Handler) http.Handler {
 			timber.DoneSince(
 				start,
 				fmt.Sprintf(
-					"%d [%s] %s",
+					"%d [%s] %s %s",
 					wrapped.statusCode,
 					strings.ToLower(http.StatusText(wrapped.statusCode)),
+					r.Method,
 					r.URL.Path,
 				),
 			)
