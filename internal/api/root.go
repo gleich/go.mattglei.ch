@@ -7,7 +7,6 @@ import (
 	"go.mattglei.ch/go.mattglei.ch/internal/conf"
 	"go.mattglei.ch/go.mattglei.ch/internal/html"
 	"go.mattglei.ch/go.mattglei.ch/internal/pkg"
-	"go.mattglei.ch/go.mattglei.ch/internal/util"
 )
 
 func rootEndpoint(config conf.Config, packages *pkg.Packages) http.HandlerFunc {
@@ -24,11 +23,6 @@ func rootEndpoint(config conf.Config, packages *pkg.Packages) http.HandlerFunc {
 			html.RenderIndex(config, packages, w)
 			return
 		}
-		if name == "favicon.ico" {
-			http.Error(w, util.NOT_FOUND_ERROR, http.StatusNotFound)
-			return
-		}
-
 		html.RenderPackage(config, packages, w, r)
 	}
 }
