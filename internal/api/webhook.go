@@ -50,7 +50,7 @@ func webhookEndpoint(
 	}
 
 	repo := packages.Get(name)
-	if repo.Name == "" {
+	if repo.Name != "" {
 		updatedRepo, err := github.FetchRepo(clients, repo.Owner, repo.Name)
 		if err != nil {
 			util.InternalServerError(w, fmt.Errorf("fetching repo: %w", err))
